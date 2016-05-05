@@ -1,0 +1,172 @@
+from tkinter import*
+from random import*
+from math import*
+
+class particle():
+    def __init__ (self,x,y,m):
+        self.size = m
+        self.posx = x
+        self.posy = y
+        self.indx = round(x / (2*m))
+        self.indy = round(y / (2*m))
+        self.speedx = 0
+        self.speedy = 0
+        self.oval = canv.create_oval(x-m,y-m,x+m,y+m,fill = 'blue',outline = 'blue')
+    def move (self):
+        canv.delete (self.oval)
+        self.speedy = self.speedy + 10*0.05                             
+        self.posx = self.posx + 0.05*self.speedx
+        self.posy = self.posy + 0.05*self.speedy
+        self.indx = round(self.posx / (2*m))
+        self.indy = round(self.posy / (2*m))
+        self.oval = canv.create_oval(self.posx-m,self.posy-m,self.posx+m,self.posy+m,fill = 'blue',outline = 'blue')
+
+class grid():
+    def __init__(self,x,y,m):
+        self.part = 0
+        self.size = m
+        self.x = x
+        self.y = y
+        self.color = 0
+    def clear (self):
+        self.part = 0
+        self.color = 0
+    def draw (self,part):
+        self.part = part
+        self.color = 1
+
+def mouse (event):
+    getx=event.x
+    gety=event.y
+    elem = particle(getx,gety,m)
+    elements.append(elem)
+    vx = uniform(-10,10)
+    vy = uniform(-10,10)
+    elem.speedx = vx
+    elem.speedy = vy
+    cages[elem.indx][elem.indy].draw(elem)
+    print ('particle appeared in (index)',cages[elem.indx][elem.indy].part.indx, cages[elem.indx][elem.indy].part.indy)
+
+def create (event):
+    N = 0
+    while N <= 10:
+        x = uniform (2*m*(nx/2 - 5), 2*m*(nx/2 + 5))
+        y = 2*m*5
+        vx = uniform(-10,10)
+        vy = uniform(1,10)
+        elem = particle(x,y,m)
+        elements.append(elem)
+        elem.speedx = vx
+        elem.speedy = vy
+        cages[elem.indx][elem.indy].draw(elem)
+        print ('particle appeared in (index)',elem.indx, elem.indy)
+        N = N + 1
+        
+def create_grid (root):
+    i = 1
+    while i < nx:
+        j = 1
+        h = []
+        while j < ny:
+            cage = grid(i,j,m)
+            h.append(cage)
+            j = j + 1
+            canv.update()
+        cages.append(h)
+        i = i + 1
+    print("grid was made succesfully (size)",i*2*m,'x',j*2*m, "or index size", i,j)
+
+def test (event):
+    i = 0
+    while i < nx - 10:
+        j = 0
+        while j < ny - 10:
+            cages[i][j].draw()
+            j = j + 1
+        i =i + 1
+
+def distance(a,b):
+    r = sqrt((a.posx-b.posx)**2 +(a.posy-b.posy)**2)
+    return r
+
+def shift_x (a,b):
+    r = distance(a,b)
+    sx = (2*m-r)/r * (a.posx - b.posx)
+    return sx
+
+def shift_y (a,b):
+    r = distance(a,b)
+    sy = (2*m-r)/r * (a.posy - b.posy)
+    return sy
+
+def check_neighbors (element):
+    rx = -1
+    while rx <= 1:
+        ry = - 1
+        while ry <= 1:
+            if cages[element.indx + rx][element.indy + ry].color != 0:
+                temp = cages[element.indx + rx][element.indy + ry].part
+                r = distance(element,temp)
+                if r < 2*m:
+                    if temp.speedx == 0:
+                        element.speedx = -0.9*element.speedx
+                    else:
+                        vx = element.speedx
+                        element.speedx = 0.9*temp.speedx
+                        temp.speedx = 0.9*vx
+                    if temp.speedy == 0:
+                        element.speedy = -0.9*element.speedy
+                    else:
+                        vy = element.speedy
+                        element.speedy = 0.9*temp.speedy
+                        temp.speedy = 0.9*vy
+                    element.posx = element.posx + shift_x(element,temp)
+                    element.posy = element.posy + shift_y(element,temp)
+                    element.indx = round(element.posx / (2*m))
+                    element.indy = round(element.posy / (2*m))
+                    canv.create_rectangle(element.posx-0.5,element.posy-0.5,element.posx+0.5,element.posy+0.5, fill = 'red',outline = 'red')
+                temp = 0
+            ry = ry + 1
+        rx = rx + 1
+
+def check_border (element,old_posx,old_posy):
+    if element.indx < 5 or element.indx > nx - 5 :
+        element.posx = old_posx
+        element.indx = round(old_posx /(2*m))
+        element.speedx = - 0.9*element.speedx
+    if element.indy < 5 or element.indy > ny - 5 :
+        element.posy = old_posy
+        element.indy = round(old_posy /(2*m))
+        element.speedy = - 0.9*element.speedy
+
+def check (element,old_posx,old_posy):
+    check_border(element,old_posx,old_posy)
+    check_neighbors(element)
+    
+def update(event):
+    while 0 < 1: 
+        for el in elements:
+            old_x = el.posx
+            old_y = el.posy
+            cages[el.indx][el.indy].clear()
+            el.move()
+            check(el,old_x,old_y)
+            cages[el.indx][el.indy].draw(el)
+            canv.update()
+                    
+root = Tk()
+m = 5
+nx = round (1300 / (2*m))
+ny = round (720 / (2*m))
+
+cages = []
+elements = []
+
+canv = Canvas(root,width=1300,height=720,bg="white",cursor="arrow")
+
+create_grid(root)
+canv.bind("<Button-1>",mouse)
+canv.bind("<Button-3>",update)
+
+canv.pack()
+root.mainloop()
