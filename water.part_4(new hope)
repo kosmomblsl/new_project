@@ -1,0 +1,118 @@
+from tkinter import*
+from random import*
+from math import*
+
+class particle():
+    def __init__ (self,x,y,m,n):
+        self.size = m
+        self.posx = x
+        self.posy = y
+        self.indx = ceil(x / (2*n))
+        self.indy = ceil(y / (2*n))
+        self.ind = (self.indx-1)*ny + self.indy
+        self.speedx = 0
+        self.speedy = 0
+        self.oval = canv.create_oval(x-m,y-m,x+m,y+m,fill = 'blue',outline = 'blue')
+    def move (self,tau,ac):
+        canv.delete (self.oval)
+        self.speedy = self.speedy + ac*tau                             
+        self.posx = self.posx + tau*self.speedx
+        self.posy = self.posy + tau*self.speedy
+        self.indx = ceil(self.posx / (2*n))
+        self.indy = ceil(self.posy / (2*n))
+        self.ind = (self.indx - 1)*ny + self.indy
+        self.oval = canv.create_oval(self.posx-m,self.posy-m,self.posx+m,self.posy+m,fill = 'blue',outline = 'blue')
+        canv.update()
+
+class grid():
+    def __init__(self,x,y,i,n):
+        self.ind = i
+        self.part = []
+        self.size = n
+        self.x = x
+        self.y = y
+        self.rect = canv.create_rectangle((x-1)*2*n,(y-1)*2*n,x*2*n,y*2*n,fill = 'white',outline = 'gray')
+    def change_into (self):
+        if self.part != []:
+            for fel in self.part:
+                fel.move(0.05,1)
+                check_border(fel)
+                
+def check_border_into(a,element):
+    if element.posx <= (a.x - 1)*2*a.size or element.posx >= a.x*2*a.size :
+        element.speedx = -0.9*element.speedx
+    if element.posy <= (a.y - 1)*2*a.size or element.posy >= a.y*2*a.size :
+        element.speedy = -0.9*element.speedy
+            
+def mouse (event):
+    getx=event.x
+    gety=event.y
+    elem = particle(getx,gety,m,n)
+    elements.append(elem)
+    vx = uniform(-2,2)
+    vy = uniform(-2,2)
+    elem.speedx = vx
+    elem.speedy = vy
+    cages[elem.ind].part.append(elem)
+    print ('particle appeared in (index)',elem.ind)
+        
+def create_grid (root):
+    i = 1
+    while i <= num:
+        x = ceil(i/ny)
+        y = i - i//ny*ny
+        cage = grid(x,y,i,n)
+        canv.update()
+        cages.append(cage)
+        i = i + 1
+    print("grid was made succesfully (maxsize)",i,'size',nx,'x',ny)
+
+def distance(a,b):
+    r = sqrt((a.posx-b.posx)**2 +(a.posy-b.posy)**2)
+    return r
+
+def check_border (element):
+    if element.posx <= 20 or element.posx >= 1280 :
+        element.speedx = -0.95*element.speedx
+        print(element.posx,element.posy,element.speedx,element.speedy)
+    if element.posy <= 20 or element.posy >= 700 :
+        element.speedy = -0.95*element.speedy
+        print(element.posx,element.posy,element.speedx,element.speedy)
+
+def test(event):
+    getx=event.x
+    gety=event.y
+    indx = ceil(getx / (2*n))
+    indy = ceil(gety / (2*n))
+    ind = (indx - 1)*ny + indy
+    if cages[ind].part != []:
+        print(cages[ind].part[0].speedx,cages[ind].part[0].speedy, cages[ind].part[0].posx ,cages[ind].part[0].posy )
+    else :
+        print('there is not particles in this cage')
+        
+def update(event):
+    while 0 < 1:
+        i = 1
+        while i <= num-1:
+            cages[i].change_into()
+            i = i + 1
+
+root = Tk()
+m = 2
+n = 50
+nx = ceil (1300 / (2*n))
+ny = ceil (720 / (2*n)+1)
+num = nx*ny
+
+cages = []
+elements = []
+
+canv = Canvas(root,width=1300,height=720,bg="white",cursor="arrow")
+
+create_grid(root)
+canv.bind("<Button-1>",mouse)
+canv.bind("<Button-2>",update)
+canv.bind("<Button-3>",test)
+
+canv.pack()
+root.mainloop()
