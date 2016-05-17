@@ -1,0 +1,247 @@
+from tkinter import *
+from random import *
+from math import *
+
+class particle():
+    def __init__ (self,x0,y0):
+        self.changed = False
+        self.posx = x0
+        self.posy = y0
+        self.speedx = 0
+        self.speedy = 0
+        self.rect = canv.create_rectangle(x0 - 0.5, y0 - 0.5 , x0 + 0.5 , y0 + 0.5, fill = 'blue',outline = 'blue')
+    def speed (self,vx,vy):
+        self.speedx = vx
+        self.speedy = vy
+    def move (self,tau,ac):
+        cages[round(self.posx)][round(self.posy)].part = None
+        self.speedy = self.speedy + ac*tau                             
+        self.posx = (self.posx + tau*self.speedx)
+        self.posy = (self.posy + tau*self.speedy)
+        cages[round(self.posx)][round(self.posy)].part = self
+        canv.move(self.rect,tau*self.speedx,tau*self.speedy)
+        
+
+class grid():
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+        self.part = None
+
+def create_grid (root):
+    i = 1
+    while i < 1300:
+        j = 1
+        h = []
+        while j < 720:
+            cage = grid(i,j)
+            h.append(cage)
+            j = j + 1
+        cages.append(h)
+        i = i + 1
+
+
+def mouse (event):
+    getx=event.x
+    gety=event.y
+    if getx < 1290 and getx > 10 and gety < 700 and gety > 10:
+        new_elem = particle(getx,gety)
+        elements.append(new_elem)
+        vx = uniform(0,0)
+        vy = uniform(-20,20)
+        new_elem.speed(vx,vy)
+        cages[getx][gety].part = new_elem
+
+def update (event):
+    while 1:
+        x=0
+        for el in elements:
+            el.move(0.05,10)
+            elwb(el)
+            el.changed = False
+            check(el)
+        canv.update()
+        
+
+def check (el):
+    el.indx = round(el.posx)
+    el.indy = round(el.posy)
+    if cages[el.indx-1][el.indy-1].part != None and not (cages[el.indx-1][el.indy-1].part.changed and el.changed):
+        a = cages[el.indx-1][el.indy-1].part
+        if a.speedx - el.speedx > 0 and a.speedy - el.speedy > 0:
+            el.changed = True
+            cages[el.indx-1][el.indy-1].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx-1][el.indy-1].part
+            cages[el.indx-1][el.indy-1].part = boof
+            cages[el.indx-1][el.indy-1].part.speedx *= 1
+            cages[el.indx-1][el.indy-1].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx-1
+            a.posy = el.indy-1
+            el.posx = el.indx
+            el.posy = el.indy'''
+    if cages[el.indx-1][el.indy].part != None and not (cages[el.indx-1][el.indy].part.changed and el.changed):
+        a = cages[el.indx-1][el.indy].part
+        if a.speedx - el.speedx > 0:
+            el.changed = True
+            cages[el.indx-1][el.indy].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx-1][el.indy].part
+            cages[el.indx-1][el.indy].part = boof
+            cages[el.indx-1][el.indy].part.speedx *= 1
+            cages[el.indx-1][el.indy].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx-1
+            a.posy = el.indy
+            el.posx = el.indx
+            el.posy = el.indy'''
+    if cages[el.indx-1][el.indy+1].part != None and not (cages[el.indx-1][el.indy+1].part.changed and el.changed):
+        a = cages[el.indx-1][el.indy+1].part
+        if a.speedx - el.speedx > 0 and a.speedy - el.speedy < 0:
+            el.changed = True
+            cages[el.indx-1][el.indy+1].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx-1][el.indy+1].part
+            cages[el.indx-1][el.indy+1].part = boof
+            cages[el.indx-1][el.indy+1].part.speedx *= 1
+            cages[el.indx-1][el.indy+1].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx-1
+            a.posy = el.indy+1
+            el.posx = el.indx
+            el.posy = el.indy'''
+    if cages[el.indx][el.indy-1].part != None and not (cages[el.indx][el.indy-1].part.changed and el.changed):
+        a = cages[el.indx][el.indy-1].part
+        if  a.speedy - el.speedy > 0:
+            el.changed = True
+            cages[el.indx][el.indy-1].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx][el.indy-1].part
+            cages[el.indx][el.indy-1].part = boof
+            cages[el.indx][el.indy-1].part.speedx *= 1
+            cages[el.indx][el.indy-1].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx
+            a.posy = el.indy-1
+            el.posx = el.indx
+            el.posy = el.indy'''
+    if cages[el.indx][el.indy+1].part != None and not (cages[el.indx][el.indy+1].part.changed and el.changed):
+        a = cages[el.indx][el.indy+1].part
+        if a.speedy - el.speedy < 0:
+            el.changed = True
+            cages[el.indx][el.indy+1].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx][el.indy+1].part
+            cages[el.indx][el.indy+1].part = boof
+            cages[el.indx][el.indy+1].part.speedx *= 1
+            cages[el.indx][el.indy+1].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx
+            a.posy = el.indy+1
+            el.posx = el.indx
+            el.posy = el.indy'''
+    if cages[el.indx+1][el.indy-1].part != None and not (cages[el.indx+1][el.indy-1].part.changed and el.changed):
+        a = cages[el.indx+1][el.indy-1].part
+        if a.speedx - el.speedx < 0 and a.speedy - el.speedy > 0:
+            el.changed = True
+            cages[el.indx+1][el.indy-1].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx+1][el.indy-1].part
+            cages[el.indx+1][el.indy-1].part = boof
+            cages[el.indx+1][el.indy-1].part.speedx *= 1
+            cages[el.indx+1][el.indy-1].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx+1
+            a.posy = el.indy-1
+            el.posx = el.indx
+            el.posy = el.indy'''
+    if cages[el.indx+1][el.indy].part != None and not (cages[el.indx+1][el.indy].part.changed and el.changed):
+        a = cages[el.indx+1][el.indy].part
+        if a.speedx - el.speedx < 0 :
+            el.changed = True
+            cages[el.indx+1][el.indy].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx+1][el.indy].part
+            cages[el.indx+1][el.indy].part = boof
+            cages[el.indx+1][el.indy].part.speedx *= 1
+            cages[el.indx+1][el.indy].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx+1
+            a.posy = el.indy
+            el.posx = el.indx
+            el.posy = el.indy'''
+    if cages[el.indx+1][el.indy+1].part != None and not (cages[el.indx+1][el.indy+1].part.changed and el.changed):
+        a = cages[el.indx+1][el.indy+1].part
+        if a.speedx - el.speedx < 0 and a.speedy - el.speedy < 0:
+            el.changed = True
+            cages[el.indx+1][el.indy+1].part.changed = True
+            boof = cages[el.indx][el.indy].part
+            cages[el.indx][el.indy].part = cages[el.indx+1][el.indy+1].part
+            cages[el.indx+1][el.indy+1].part = boof
+            cages[el.indx+1][el.indy+1].part.speedx *= 1
+            cages[el.indx+1][el.indy+1].part.speedy *= 1
+            cages[el.indx][el.indy].part.speedx *= 1
+            cages[el.indx][el.indy].part.speedy *= 1
+            '''a.posx = el.indx+1
+            a.posy = el.indy+1
+            el.posx = el.indx
+            el.posy = el.indy'''
+
+def elwb (el):
+    if el.posx < 10:
+        cages[round(el.posx)][round(el.posy)].part = None
+        canv.move(el.rect,el.posx - 10,0)
+        el.posx = 10
+        cages[round(el.posx)][round(el.posy)].part = el
+        if el.speedx != 0:
+            el.speedx = -0.5 *el.speedx
+    if el.posy < 10:
+        cages[round(el.posx)][round(el.posy)].part = None
+        canv.move(el.rect,0,el.posy-10)
+        el.posy = 10
+        cages[round(el.posx)][round(el.posy)].part = el
+        if el.speedy != 0:
+            el.speedy = -0.5 *el.speedy
+    if el.posx > 1290:
+        cages[round(el.posx)][round(el.posy)].part = None
+        canv.move(el.rect,1290-el.posx,0)
+        el.posx = 1290
+        cages[round(el.posx)][round(el.posy)].part = el
+        if el.speedx != 0:
+            el.speedx = -0.5 *el.speedx
+    if el.posy > 700:
+        cages[round(el.posx)][round(el.posy)].part = None
+        canv.move(el.rect,0,700-el.posy)
+        el.posy = 700
+        cages[round(el.posx)][round(el.posy)].part = el
+        if el.speedy != 0:
+            el.speedy = -0.5 *el.speedy
+
+def number (event):
+    b = len(elements)
+    print (b)
+
+def distance(a,b):
+    r = sqrt((a.posx-b.posx)**2 +(a.posy-b.posy)**2)
+    return r
+
+root = Tk()
+canv = Canvas(root,width=1300,height=720,bg="white",cursor="arrow")
+elements = []
+cages=[]
+create_grid(root)
+
+canv.bind("<Motion>",mouse)
+canv.bind("<Button-3>",number)
+canv.bind("<Button-1>",update)
+
+canv.pack()
+root.mainloop()
