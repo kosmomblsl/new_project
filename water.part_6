@@ -1,0 +1,125 @@
+from tkinter import*
+from random import*
+from math import*
+
+class particle():
+    def __init__ (self,x0,y0,m):
+        self.changed = None
+        self.time = 0
+        self.flag = 0
+        self.size = m
+        self.posx = x0
+        self.posy = y0
+        self.speedx = 0
+        self.speedy = 0
+        self.oval = canv.create_oval (x0 - m, y0 - m , x0 + m , y0 + m, fill = 'blue',outline = 'blue')
+    def speed (self,vx,vy):
+        self.speedx = vx
+        self.speedy = vy
+
+def mouse (event):
+    getx=event.x
+    gety=event.y
+    if getx < 1290 and getx > 10 and gety < 700 and gety > 10:
+        new_elem = particle(getx,gety,m)
+        elements.append(new_elem)
+        vx = uniform(0,0)
+        vy = uniform(0,0)
+        new_elem.speed(vx,vy)
+
+def number (event):
+    b = len(elements)
+    print (b)
+
+def distance(a,b):
+    r = sqrt((a.posx-b.posx)**2 +(a.posy-b.posy)**2)
+    return r
+
+def gravitation (speed,g,tau):
+    new_speed = speed + g*tau
+    return new_speed
+
+def stop (event):
+    flag = 0
+    print("after stop",flag)
+
+def myborder(event):
+    getx=event.x
+    gety=event.y
+    if getx < 1290 and getx > 10 and gety < 700 and gety > 10:
+        new_elem = particle(getx,gety,b)
+        canv.itemconfig(new_elem.oval, fill = 'green', outline = 'green')
+        border.append(new_elem)
+
+def close (event):
+    root.destroy()
+    root.quit()
+
+def motion (event):
+    while 0 < 1:
+        for first_elem in elements:
+            if first_elem.posx > 1280:
+                canv.move(first_elem.oval,-first_elem.posx + 1280,0 )
+                first_elem.posx = 1280 
+                first_elem.speedx = -0.9*first_elem.speedx 
+            if first_elem.posx < 20:
+                canv.move(first_elem.oval,-first_elem.posx + 20,0 )
+                first_elem.posx = 20
+                first_elem.speedx = -0.9*first_elem.speedx 
+            if first_elem.posy > 650:
+                canv.move(first_elem.oval,0,-first_elem.posy + 650 )
+                first_elem.posy = 650
+                first_elem.speedy = -0.9*first_elem.speedy         
+            if first_elem.posy < 20:
+                canv.move(first_elem.oval,0,-first_elem.posy + 20 )
+                first_elem.posy = 20
+                first_elem.speedy = -0.9*first_elem.speedy
+
+            for b_elem in border:
+                if distance(first_elem,b_elem) < m:
+                    first_elem.speedx = -0.9*first_elem.speedx
+                    first_elem.speedy = -0.9*first_elem.speedy
+            
+            for second_elem in elements:
+                if first_elem != second_elem and second_elem.changed != first_elem:
+                    if distance(first_elem,second_elem) < m:
+                        first_elem.changed = second_elem
+                        v1x = first_elem.speedx
+                        v1y = first_elem.speedy
+                        first_elem.speedx = 0.9*second_elem.speedx
+                        first_elem.speedy = 0.9*second_elem.speedy
+                        second_elem.speedx = 0.9*v1x
+                        second_elem.speedy = 0.9*v1y
+                        if first_elem.posx > second_elem.posx:
+                            first_elem.posx = first_elem.posx + m
+                            canv.move(first_elem.oval, m,0)
+                        else:
+                            first_elem.posx = first_elem.posx - m
+                            canv.move(first_elem.oval, -m,0)
+                        if first_elem.posy > second_elem.posy:
+                            first_elem.posy = first_elem.posy + m
+                            canv.move(first_elem.oval, 0,m)
+                        else:
+                            first_elem.posy = first_elem.posy - m
+                            canv.move(first_elem.oval, 0,-m)
+            first_elem.speedy = gravitation(first_elem.speedy,10,tau)
+            first_elem.posx = first_elem.posx + tau*first_elem.speedx
+            first_elem.posy = first_elem.posy + tau*first_elem.speedy
+            canv.move(first_elem.oval,tau*first_elem.speedx,tau*first_elem.speedy)
+        canv.update()
+          
+root = Tk()
+tau = 0.5
+m = 5
+b = 5
+elements = []
+border = []
+canv = Canvas(root,width=1300,height=720,bg="white",cursor="arrow")
+
+root.bind("<Motion>",mouse)
+canv.bind("<Button-1>",motion)
+canv.bind("<Button-3>",number)
+root.bind("<Alt_L>",myborder)
+
+canv.pack()
+root.mainloop()
