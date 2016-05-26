@@ -1,0 +1,147 @@
+from tkinter import*
+from random import*
+from math import*
+
+class particle():
+    def __init__ (self,x0,y0,m):
+        self.size = m
+        self.posx = x0
+        self.posy = y0
+        self.speedx = 0
+        self.speedy = 0
+        self.oval = canv.create_oval (x0 - 1.5*m, y0 - 1.5*m , x0 + 1.5*m , y0 + 1.5*m, fill = 'blue',outline = 'blue')
+    def speed (self,vx,vy):
+        self.speedx = vx
+        self.speedy = vy
+
+def mouse (event):
+    getx=event.x
+    gety=event.y
+    new_elem = particle(getx,gety,m)
+    elements.append(new_elem)
+    vx = uniform(-10,10)
+    vy = uniform(-10,10)
+    new_elem.speed(vx,vy)
+
+def myborder(event):
+    getx=event.x
+    gety=event.y
+    if getx < 1290 and getx > 10 and gety < 700 and gety > 10:
+        new_elem = particle(getx,gety,b)
+        canv.itemconfig(new_elem.oval, fill = 'green', outline = 'green')
+        myb.append(new_elem)
+
+def number (event):
+    b = len(elements)
+    print (b)
+
+def mod(a,b):
+    r = sqrt((a.posx-b.posx)**2 +(a.posy-b.posy)**2)
+    return r
+
+def gravitation (speed,g):
+    new_speed = speed + g*tau
+    return new_speed
+
+def stop (event):
+    flag = 0
+    print("after stop",flag)
+
+def border (element):
+    if element.posx > 1280:
+        canv.move(element.oval,-element.posx + 1280,0 )
+        element.posx = 1280 
+        element.speedx = -remain*element.speedx 
+    if element.posx < 20:
+        canv.move(element.oval,-element.posx + 20,0 )
+        element.posx = 20
+        element.speedx = -remain*element.speedx 
+    if element.posy > 600:
+        canv.move(element.oval,0,-element.posy + 600 )
+        element.posy = 600
+        element.speedy = -remain*element.speedy         
+    if element.posy < 20:
+        canv.move(element.oval,0,-element.posy + 20 )
+        element.posy = 20
+        element.speedy = -remain*element.speedy
+
+def check(elem):
+    for b_elem in myb:
+        if mod(elem,b_elem) < b+m:
+            r = mod(elem,b_elem)
+            cosa = (b_elem.posx - elem.posx)/r
+            sina = (b_elem.posy - elem.posy)/r
+            
+            vn1 = ((b_elem.posx - elem.posx)*elem.speedy + (b_elem.posy - elem.posy)*elem.speedx)/r    
+            vt1 = remain*sqrt(elem.speedx**2+elem.speedy**2 - vn1**2)
+            elem.speedx = (vn1*sina - vt1*cosa)
+            elem.speedy = (vn1*cosa - vt1*sina)
+
+            elem.posx = elem.posx - (b+m-r+1)*cosa
+            elem.posy = elem.posy - (b+m-r+1)*sina
+            canv.move(elem.oval,- (b+m-r+1)*cosa,- (b+m-r+1)*sina)
+
+def collision(elem1,elem2):
+    if elem1 != elem2:
+        if mod(elem1,elem2) < 2*m:
+            r = mod(elem1,elem2)
+            cosa = (elem2.posx - elem1.posx)/r
+            sina = (elem2.posy - elem1.posy)/r
+            
+            vn1 = ((elem2.posx - elem1.posx)*elem1.speedy + (elem2.posy - elem1.posy)*elem1.speedx)/r
+            vn2 = ((elem2.posx - elem1.posx)*elem2.speedy + (elem2.posy - elem1.posy)*elem2.speedx)/r
+            vt1 = remain*sqrt(elem1.speedx**2+elem1.speedy**2 - vn1**2)
+            vt2 = remain*sqrt(elem2.speedx**2+elem2.speedy**2 - vn2**2)
+            elem1.speedx = (vn1*sina + vt2*cosa)
+            elem1.speedy = (vn1*cosa + vt2*sina)
+            elem2.speedx = (vn2*sina + vt1*cosa)
+            elem2.speedy = (vn2*cosa + vt1*sina)
+
+            elem1.posx = elem1.posx - (2*m-r+1)*cosa
+            elem1.posy = elem1.posy - (2*m-r+1)*sina
+            canv.move(elem1.oval,- (2*m-r+1)*cosa,- (2*m-r+1)*sina)
+                
+def move(elem):
+    elem.speedy = gravitation(elem.speedy,10)
+    elem.posx = elem.posx + tau*elem.speedx
+    elem.posy = elem.posy + tau*elem.speedy
+    canv.move(elem.oval,tau*elem.speedx,tau*elem.speedy)
+
+def print_border():
+    canv.create_line(0,600,1300,600,width=3,fill = "red")
+  
+def motion (event):
+    i = 0
+    while 1:
+        i=i+1
+        for first_elem in elements:
+            border(first_elem)
+            check(first_elem)
+            for second_elem in elements:
+                collision(first_elem,second_elem)
+            move(first_elem)
+        if i == screen:
+            canv.update()
+            i = 0
+        
+
+screen = 1
+tau = 0.2
+remain = 0.8
+root = Tk()
+m = 5
+b = 10
+elements = []
+myb = []
+canv = Canvas(root,width=1300,height=720,bg="white",cursor="arrow")
+print_border()
+
+root.bind("<Alt_L>",myborder)
+root.bind("<Control-Motion>",myborder)
+canv.bind("<Alt_R>",mouse)
+canv.bind("<Shift-Motion>",mouse)
+canv.bind("<Button-1>",motion)
+canv.bind("<Button-3>",number)
+
+canv.pack()
+root.mainloop()
