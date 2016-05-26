@@ -1,0 +1,207 @@
+from tkinter import*
+from random import*
+from math import*
+
+class particle():
+    def __init__ (self,x,y,m):
+        self.b = 0
+        self.size = m
+        self.posx = x
+        self.posy = y
+        self.indx = round(x / (2*m))
+        self.indy = round(y / (2*m))
+        self.speedx = 0
+        self.speedy = 0
+        self.oval = canv.create_oval(x-m,y-m,x+m,y+m,fill = 'blue',outline = 'blue')
+
+class grid():
+    def __init__(self,x,y,m):
+        self.part = None
+        self.size = m
+        self.x = x
+        self.y = y
+        self.color = 0
+        self.rect = canv.create_rectangle((x-1)*2*m,(y-1)*2*m,x*2*m,y*2*m,fill = 'white',outline = 'gray')
+    def clear (self):
+        self.part = 0
+        self.color = 0
+    def draw (self,part):
+        self.part = part
+        self.color = 1
+    def draw_b(self,part):
+        self.color = 1
+        self.part = part
+        canv.itemconfig(self.rect, fill = 'green', outline = 'green')
+
+def mouse (event):
+    getx=event.x
+    gety=event.y
+    if getx < 1200 and getx > 20 and gety < 700 and gety > 20:
+        elem = particle(getx,gety,m)
+        elements.append(elem)
+        vx = uniform(-10,10)
+        vy = uniform(-10,10)
+        elem.speedx = vx
+        elem.speedy = vy
+        cages[elem.indx][elem.indy].draw(elem)
+        #print ('particle appeared in (index)',cages[elem.indx][elem.indy].part.indx, cages[elem.indx][elem.indy].part.indy)
+
+def temp(event):
+    for el in elements:
+        el.speedx = 2*el.speedx
+        el.speedy = 2*el.speedy
+
+def myborder(event):
+    getx=event.x
+    gety=event.y
+    if getx < 1200 and getx > 20 and gety < 700 and gety > 20:
+        elem = particle(getx,gety,m)
+        elem.b = 1
+        canv.delete(elem.oval)
+        cages[elem.indx][elem.indy].draw_b(elem)
+        
+
+def move(elem):
+    elem.speedy = gravitation(elem.speedy,10)
+    elem.posx = elem.posx + tau*elem.speedx
+    elem.posy = elem.posy + tau*elem.speedy
+    canv.move(elem.oval,tau*elem.speedx,tau*elem.speedy)
+        
+def create_grid (root):
+    i = 1
+    while i < nx:
+        j = 1
+        h = []
+        while j < ny:
+            cage = grid(i,j,m)
+            h.append(cage)
+            j = j + 1
+            canv.update()
+        cages.append(h)
+        i = i + 1
+    #print("grid was made succesfully (size)",i*2*m,'x',j*2*m, "or index size", i,j)
+
+def number (event):
+    b = len(elements)
+    print (b)
+
+def test (event):
+    i = 1
+    while i < nx:
+        j = 1
+        while j < ny:
+            if cages[i][j].b == 1:
+                print(cages[i][j].part.posx)
+            j = j + 1
+        i = i + 1
+
+def mod(a,b):
+    r = sqrt((a.posx-b.posx)**2 +(a.posy-b.posy)**2)
+    return r
+
+def collision(elem1,elem2):
+    if elem1 != elem2:
+        if mod(elem1,elem2) < 2*m:
+            r = mod(elem1,elem2)
+            cosa = (elem2.posx - elem1.posx)/r
+            sina = (elem2.posy - elem1.posy)/r
+            
+            vn1 = ((elem2.posx - elem1.posx)*elem1.speedy + (elem2.posy - elem1.posy)*elem1.speedx)/r
+            vn2 = ((elem2.posx - elem1.posx)*elem2.speedy + (elem2.posy - elem1.posy)*elem2.speedx)/r
+            vt1 = remain*sqrt(elem1.speedx**2+elem1.speedy**2 - vn1**2)
+            vt2 = remain*sqrt(elem2.speedx**2+elem2.speedy**2 - vn2**2)
+            elem1.speedx = (vn1*sina + vt2*cosa)
+            elem1.speedy = (vn1*cosa + vt2*sina)
+            elem2.speedx = (vn2*sina + vt1*cosa)
+            elem2.speedy = (vn2*cosa + vt1*sina)
+
+            elem1.posx = elem1.posx - (2*m-r+1)*cosa
+            elem1.posy = elem1.posy - (2*m-r+1)*sina
+            canv.move(elem1.oval,- (2*m-r+1)*cosa,- (2*m-r+1)*sina)
+
+def collision_b(elem,b_elem):
+    if mod(elem,b_elem) < 2*m:
+        r = mod(elem,b_elem)
+        cosa = (b_elem.posx - elem.posx)/r
+        sina = (b_elem.posy - elem.posy)/r
+            
+        vn1 = ((b_elem.posx - elem.posx)*elem.speedy + (b_elem.posy - elem.posy)*elem.speedx)/r    
+        vt1 = remain*sqrt(elem.speedx**2+elem.speedy**2 - vn1**2)
+        elem.speedx = (vn1*sina - vt1*cosa)
+        elem.speedy = (vn1*cosa - vt1*sina)
+
+        elem.posx = elem.posx - (2*m-r+1)*cosa
+        elem.posy = elem.posy - (2*m-r+1)*sina
+        canv.move(elem.oval,- (2*m-r+1)*cosa,- (2*m-r+1)*sina)
+    
+def check_neighbors (element):
+    rx = -1
+    while rx <= 1:
+        ry = - 1
+        while ry <= 1:
+            if cages[element.indx + rx][element.indy + ry].color != 0 and cages[element.indx + rx][element.indy + ry].part.b == 0:
+                collision(element,cages[element.indx + rx][element.indy + ry].part)
+            elif cages[element.indx + rx][element.indy + ry].color != 0 and cages[element.indx + rx][element.indy + ry].part.b != 0:
+                collision_b(element,cages[element.indx + rx][element.indy + ry].part)
+            ry = ry + 1
+        rx = rx + 1
+        
+def check_border (element):
+    if element.posx > 1200:
+        canv.move(element.oval,-element.posx + 1200,0 )
+        element.posx = 1200 
+        element.speedx = -remain*element.speedx 
+    if element.posx < 20:
+        canv.move(element.oval,-element.posx + 20,0 )
+        element.posx = 20
+        element.speedx = -remain*element.speedx 
+    if element.posy > 680:
+        canv.move(element.oval,0,-element.posy + 680 )
+        element.posy = 680
+        element.speedy = -remain*element.speedy         
+    if element.posy < 20:
+        canv.move(element.oval,0,-element.posy + 20 )
+        element.posy = 20
+        element.speedy = -remain*element.speedy
+
+def gravitation (speed,g):
+    new_speed = speed + g*tau
+    return new_speed
+    
+def update(event):
+    i = 0
+    while 0 < 1:
+        i = i + 1
+        for el in elements:
+            cages[el.indx][el.indy].clear()
+            move(el)
+            check_neighbors(el)
+            check_border(el)
+            el.indx = round(el.posx / (2*m))
+            el.indy = round(el.posy / (2*m))
+            cages[el.indx][el.indy].draw(el)
+        if i == screen:
+            canv.update()
+            i = 0
+                    
+root = Tk()
+m = 5
+tau = 0.1
+remain = 0.8
+screen = 10
+nx = round (1300 / (2*m))
+ny = round (720 / (2*m))
+
+myb = []
+cages = []
+elements = []
+canv = Canvas(root,width=1300,height=720,bg="white",cursor="arrow")
+
+create_grid(root)
+root.bind("<Control-Motion>",myborder)
+root.bind("<Button-2>",temp)
+canv.bind("<Shift-Motion>",mouse)
+canv.bind("<Button-1>",update)
+canv.bind("<Button-3>",number)
+canv.pack()
+root.mainloop()
