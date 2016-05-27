@@ -1,0 +1,80 @@
+from pylab import*
+from numpy import*
+from math import*
+from matplotlib.pyplot import*
+from mpl_toolkits.mplot3d import Axes3D
+
+def makeData (x0,y0,z0,a,b,c,tau,lim):
+    
+    gridx = []
+    gridy = []
+    gridz = []
+    gridvx = []
+    gridvy = []
+    gridvz = []
+    
+    x=x0
+    y=y0
+    z=z0
+    i = 0
+    while i<10000:
+        
+        vx = x - a*y -x*z
+        vy = b*x + y - y*z
+        vz = x**2 + y**2 - z/(z+c)
+        x = x +vx*tau
+        y = y +vy*tau
+        z = z +vz*tau
+        gridx.append(x)
+        gridy.append(y)
+        gridz.append(z)
+        gridvx.append(vx)
+        gridvy.append(vy)
+        gridvz.append(vz)
+        i += 1
+
+    return gridx, gridy, gridz,gridvx , gridvy , gridvz
+
+
+
+x,y,z,vx,vy,vz = makeData(1,1,1,2,2,2,0.01,20)
+
+subplot (2, 3, 1)
+plot1 = plot(vx,x)
+setp(plot1,color='blue',linewidth=2)
+title ("vx-x")
+
+
+subplot (2, 3, 2)
+plot2 = plot(vy,y)
+setp(plot2,color='blue',linewidth=2)
+title ("vy-y")
+
+
+subplot (2, 3, 3)
+plot3 = plot(vz,z)
+setp(plot3,color='blue',linewidth=2)
+title ("vz-z")
+
+subplot (2, 3, 4)
+plot4 = plot(vx,vy)
+setp(plot4,color='blue',linewidth=2)
+title ("vx-vy")
+
+subplot (2, 3, 5)
+plot5 = plot(vx,vz)
+setp(plot5,color='blue',linewidth=2)
+title ("vx-vz")
+
+subplot (2, 3, 6)
+plot6 = plot(vy,vz)
+setp(plot6,color='blue',linewidth=2)
+title ("vy-vz")
+
+fig = figure()
+mpl.rcParams['legend.fontsize'] = 10
+ax = fig.gca(projection='3d')
+ax.plot(x,y,z)
+
+show()
+    
